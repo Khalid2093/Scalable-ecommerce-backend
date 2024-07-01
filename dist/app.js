@@ -9,6 +9,7 @@ import cors from "cors";
 import { Redis } from "ioredis";
 import cluster from "cluster";
 import os from "os";
+import { io } from "socket.io-client";
 // importing routes
 import userRoute from "./routes/user.js";
 import productRoute from "./routes/product.js";
@@ -25,6 +26,7 @@ export const redis = new Redis({
     port: process.env.REDIS_PORT,
     password: process.env.REDIS_PASSWORD,
 });
+export const socket = io("http://localhost:8000");
 const stripeKey = process.env.STRIPE_KEY || "";
 export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();

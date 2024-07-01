@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
 import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
 import { Product } from "../models/product.js";
-import { myCache } from "../app.js";
+import { myCache, socket } from "../app.js";
 import { redis } from "../app.js";
 
 export const connectDB = (username: string, pass: string) => {
@@ -56,6 +56,11 @@ export const invalidateCache = ({
     // myCache.del(orderKeys);
   }
   if (admin) {
+    socket.on("connect", () => {
+      socket.emit("getStats");
+      console.log("update sent");
+      socket.disconnect();
+    });
     redis.del([
       "admin-stats",
       "admin-pie-charts",

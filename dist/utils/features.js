@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Product } from "../models/product.js";
+import { socket } from "../app.js";
 import { redis } from "../app.js";
 export const connectDB = (username, pass) => {
     mongoose
@@ -41,6 +42,11 @@ export const invalidateCache = ({ product, order, admin, userId, orderId, produc
         // myCache.del(orderKeys);
     }
     if (admin) {
+        socket.on("connect", () => {
+            socket.emit("getStats");
+            console.log("update sent");
+            socket.disconnect();
+        });
         redis.del([
             "admin-stats",
             "admin-pie-charts",
