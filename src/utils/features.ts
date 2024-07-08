@@ -1,8 +1,12 @@
 import mongoose, { Document } from "mongoose";
 import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
 import { Product } from "../models/product.js";
-import { myCache, socket } from "../app.js";
+import { myCache } from "../app.js";
 import { redis } from "../app.js";
+import axios from "axios";
+import OpenAI from "openai";
+import { EmbeddingModel, FlagEmbedding } from "fastembed";
+import { pipeline } from "@xenova/transformers";
 
 export const connectDB = (username: string, pass: string) => {
   mongoose
@@ -20,7 +24,7 @@ export const connectDB = (username: string, pass: string) => {
     });
 };
 
-export const invalidateCache = ({
+export const invalidateCache = async ({
   product,
   order,
   admin,
@@ -43,7 +47,7 @@ export const invalidateCache = ({
         productKeys.push(`product-${id}`);
       });
     }
-    redis.del(productKeys);
+    await redis.del(productKeys);
     // myCache.del(productKeys);
   }
   if (order) {
@@ -52,16 +56,12 @@ export const invalidateCache = ({
       `my-orders-${userId}`,
       `order-${orderId}`,
     ];
-    redis.del(orderKeys);
+    await redis.del(orderKeys);
     // myCache.del(orderKeys);
   }
   if (admin) {
-    socket.on("connect", () => {
-      socket.emit("getStats");
-      console.log("update sent");
-      socket.disconnect();
-    });
-    redis.del([
+    await redis.publish("admin-stats-sub", "update");
+    await redis.del([
       "admin-stats",
       "admin-pie-charts",
       "admin-bar-charts",
@@ -154,4 +154,34 @@ export const getChartData = ({
   });
 
   return data;
+};
+
+export const create_embedding = async (description: string) => {
+  const tf = require("@tensorflow/tfjs-core");
+  const converter = require("@tensorflow/tfjs-converter");
+
+  async function loadUSEModel() {
+    const modelUrl =
+      "https://tfhub.dev/google/universal-sentence-encoder/lite/model.tflite"; // Replace with appropriate URL
+    const model = await converter.loadLiteModel(modelUrl);
+    return model;
+  }
+
+  // console.log("creating embeding");
+  // const extractor = await pipeline(
+  //   "feature-extraction",
+  //   "Xenova/bert-base-uncased",
+  //   { revision: "default" }
+  // );
+  // const output = await extractor("This is a simple test.", {
+  //   pooling: "mean",
+  //   normalize: true,
+  // });
+  // // Tensor {
+  // //   type: 'float32',
+  // //   data: Float32Array [0.03373778983950615, -0.010106077417731285, ...],
+  // //   dims: [1, 768]
+  // // }
+
+  // return output.data;
 };
