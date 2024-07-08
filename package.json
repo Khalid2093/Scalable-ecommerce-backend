@@ -5,10 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "node build/app.js",
     "build": "tsc",
     "watch": "tsc -w",
-    "dev": "nodemon ./dist/app.js"
+    "dev": "nodemon ./build/app.js"
   },
   "keywords": [],
   "author": "",
